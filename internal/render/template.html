@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>__TITLE__</title>
+<style>
+:root{--bg:#0f1117;--panel:#171a23;--card:#1c2030;--line:#2a3040;--txt:#e5e7eb;--mut:#9ca3af;
+--red:#ef4444;--amber:#f59e0b;--green:#22c55e;--blue:#3b82f6;--violet:#8b5cf6;--cyan:#22d3ee;--pink:#ec4899}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column}
+header{padding:10px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header h1{font-size:15px;margin:0;color:#c4b5fd}
+header .sub{font-size:11px;color:var(--mut)}
+#wrap{display:flex;flex:1;min-height:0}
+#side{width:230px;min-width:210px;border-right:1px solid var(--line);padding:12px;background:var(--panel);overflow-y:auto}
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+#controls{padding:8px 12px;border-bottom:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px}
+button{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px}
+button:hover{border-color:var(--violet)}
+input[type=range]{width:140px}
+#stats{font-size:11px;color:var(--mut)}
+#rangeLbl{color:var(--violet);font-weight:600}
+#scrollArea{flex:1;overflow-x:auto;overflow-y:hidden;position:relative}
+#tlInner{position:relative;min-width:100%}
+#tl{position:relative;min-height:100%}
+.axis{display:flex;height:26px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.axis .host{width:120px;min-width:120px;font-size:10px;color:var(--mut);padding-left:6px}
+.axis .ticks{flex:1;position:relative}
+.tick{position:absolute;top:3px;font-size:10px;color:var(--mut);border-left:1px solid var(--line);padding-left:3px;white-space:nowrap}
+.lane{display:flex;align-items:center;height:36px;border-bottom:1px solid var(--line);position:relative}
+.lane .host{width:120px;min-width:120px;font-size:12px;font-weight:600;padding-left:6px;z-index:3;background:var(--bg)}
+.lane .track{flex:1;position:relative;height:100%}
+#band{position:absolute;top:0;bottom:0;background:#ef444414;border-left:1px dashed #ef444088;border-right:1px dashed #ef444088;pointer-events:none;z-index:1}
+#bandLbl{position:absolute;top:2px;font-size:10px;color:#ef4444;transform:translateX(-50%);white-space:nowrap;z-index:2;pointer-events:none}
+.bar{position:absolute;top:7px;height:20px;border-radius:3px;cursor:pointer}
+.bar:hover{filter:brightness(1.6);outline:1px solid #fff}
+.fact{position:absolute;width:9px;height:18px;top:9px;border-radius:50%;cursor:pointer;z-index:4}
+.fact:hover{transform:scale(1.4);outline:1px solid #fff}
+.legend{font-size:12px}
+.legend .row{display:flex;align-items:center;gap:6px;margin:4px 0;cursor:pointer;user-select:none}
+.legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.legend .row.off{opacity:.35}
+.hint{font-size:11px;color:var(--mut);margin-top:10px;line-height:1.5}
+#tip{position:fixed;background:#000d;border:1px solid var(--violet);border-radius:8px;padding:8px 12px;font-size:12px;max-width:360px;pointer-events:none;display:none;z-index:99;box-shadow:0 4px 20px #000a}
+#tip b{color:#c4b5fd}
+#tip .t{color:var(--mut);font-size:11px}
+#panel{border-top:1px solid var(--violet);background:var(--panel);max-height:38%;overflow-y:auto;padding:12px 16px;font-size:13px;display:none}
+#panel h3{margin:0 0 6px;color:#c4b5fd;font-size:14px}
+#panel .close{float:right;cursor:pointer;color:var(--mut);border:1px solid var(--line);border-radius:5px;padding:1px 8px;font-size:12px}
+#panel .close:hover{color:#fff;border-color:var(--violet)}
+#panel table{border-collapse:collapse;margin:6px 0;font-size:12px;width:100%}
+#panel td{border:1px solid var(--line);padding:3px 8px;vertical-align:top}
+#panel td.k{color:var(--mut);white-space:nowrap}
+#panel .rec{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:6px 0;font-family:Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-word}
+#panel .rec .hdr{color:#c4b5fd;font-weight:600}
+#panel .mut{color:var(--mut);font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <h1>__TITLE__</h1>
+  <div class="sub">времена UTC (Мск = UTC+3) · данные: Hayabusa dfir-timeline · gotimeline</div>
+</header>
+<div id="wrap">
+<div id="side">
+  <div class="legend" id="legend"></div>
+  <div class="hint">Полосы — почасовое число событий (уровень ≥ порога). Круглые маркеры — ключевые находки (если заданы).<br><br><b>Клик по столбику или маркеру</b> — полное описание внизу с записями журнала.<br><br>Масштаб: <b>колесо</b> — зум к курсору, <b>протянуть мышью</b> — выделить интервал, <b>двойной клик</b> — весь период, <b>Shift+колесо / полоса</b> — горизонтальная прокрутка.</div>
+</div>
+<div id="main">
+  <div id="controls">
+    <button id="reset">⟲ весь период</button>
+    <span id="rangeLbl"></span>
+    <label>Порог всплеска: <input type="range" id="thr" min="1" max="50" value="10"> <span id="thrV">10</span>/час</label>
+    <span id="stats"></span>
+  </div>
+  <div id="scrollArea"><div id="tlInner"><div id="tl"></div></div></div>
+  <div id="panel"></div>
+</div>
+</div>
+<div id="tip"></div>
+<script>
+const DATA = /*__DATA__*/null;
+let T0=0,T1=0,hoursTotal=0,T0V=0,T1V=0,zoomed=false;
+const HOUR=3600e3;
+const KIND={
+ ksos:{c:'--red',n:'Антивирус OFF/SNOOZED'},
+ anydesk:{c:'--amber',n:'AnyDesk/удалёнка'},
+ nataliya:{c:'--violet',n:'Аутентификации Nataliya→srv'},
+ niols:{c:'--cyan',n:'Действия niols (админ)'},
+ msi:{c:'--pink',n:'Установка ПО (MSI)'},
+ reboot:{c:'--blue',n:'Перезагрузки'},
+ journal:{c:'--blue',n:'Ротация журналов'},
+ mesh:{c:'--green',n:'Mesh-залпы obmen/аноним'},
+ anon:{c:'--green',n:'Анонимные входы'},
+ anom:{c:'--red',n:'Прочие аномалии'},
+ rdp:{c:'--violet',n:'RDP-входы'},
+};
+const HOST_COLORS=['#3b82f6','#22d3ee','#8b5cf6','#f59e0b','#22c55e','#ec4899','#94a3b8','#f97316','#14b8a6'];
+const fmtT=ms=>new Date(ms).toISOString().slice(0,16).replace('T',' ');
+const fmtDay=ms=>new Date(ms).toISOString().slice(0,10);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+(function(){
+ let tmin=Infinity,tmax=-Infinity;
+ DATA.facts.forEach(f=>{const t=Date.parse(f.t+':00Z');tmin=Math.min(tmin,t);tmax=Math.max(tmax,t)});
+ Object.values(DATA.hourly).forEach(a=>a.forEach(p=>{const t=Date.parse(p.t+':00Z');tmin=Math.min(tmin,t);tmax=Math.max(tmax,t)}));
+ T0=Math.floor(tmin/HOUR)*HOUR;T1=Math.ceil(tmax/HOUR)*HOUR;hoursTotal=(T1-T0)/HOUR;
+ buildLegend();render();
+})();
+
+function buildLegend(){
+ const lg=document.getElementById('legend');
+ lg.innerHTML='<b style="font-size:12px">Типы находок</b>';
+ new Set(DATA.facts.map(f=>f.kind)).forEach(k=>{
+  const row=document.createElement('div');row.className='row';row.dataset.k=k;
+  row.innerHTML=`<span class="dot" style="background:var(${(KIND[k]||{c:'--red'}).c})"></span>${(KIND[k]||{n:k}).n}`;
+  row.onclick=()=>{row.classList.toggle('off');render()};
+  lg.appendChild(row);
+ });
+ const hb=document.createElement('div');hb.style.marginTop='10px';hb.innerHTML='<b style="font-size:12px">Хосты</b>';
+ DATA.hosts.forEach((h,i)=>{
+  const row=document.createElement('div');row.className='row';row.dataset.h=h;
+  row.innerHTML=`<span class="dot" style="background:${HOST_COLORS[i%HOST_COLORS.length]}"></span>${esc(h)}`;
+  row.onclick=()=>{row.classList.toggle('off');render()};
+  hb.appendChild(row);
+ });
+ lg.appendChild(hb);
+}
+
+function render(){
+ const tl=document.getElementById('tl'),inner=document.getElementById('tlInner'),area=document.getElementById('scrollArea');
+ const t0=zoomed?T0V:T0, t1=zoomed?T1V:T0+hoursTotal*HOUR, span=(t1-t0)/HOUR;
+ const hiddenH=[...document.querySelectorAll('.row[data-h].off')].map(e=>e.dataset.h);
+ const hiddenK=new Set([...document.querySelectorAll('.row[data-k].off')].map(e=>e.dataset.k));
+ const px=Math.max(area.clientWidth,900);
+ inner.style.width=zoomed?Math.round(px*Math.min(12,hoursTotal/span))+'px':'100%';
+ tl.innerHTML='';
+ if(DATA.incident){
+  const bFrom=Date.parse(DATA.incident.from+'Z'),bTo=Date.parse(DATA.incident.to+'Z');
+  const bEl=document.createElement('div');bEl.id='band';
+  bEl.style.left=Math.max(0,(bFrom-t0)/(t1-t0)*100)+'%';
+  bEl.style.right=Math.max(0,(t1-bTo)/(t1-t0)*100)+'%';
+  tl.appendChild(bEl);
+  const bl=document.createElement('div');bl.id='bandLbl';
+  bl.style.left=Math.max(5,(Math.max(bFrom,t0)+(Math.min(bTo,t1)-Math.max(bFrom,t0))/2-t0)/(t1-t0)*100)+'%';
+  bl.textContent='окно инцидента';
+  tl.appendChild(bl);
+ }
+ const ax=document.createElement('div');ax.className='axis';
+ ax.innerHTML='<div class="host">время →</div><div class="ticks"></div>';tl.appendChild(ax);
+ const ticks=ax.querySelector('.ticks');
+ const step=span>24*60?24*14:span>24*20?24*7:span>24*4?24:span>96?6:span>24?2:1;
+ for(let t=Math.ceil(t0/(step*HOUR))*step*HOUR;t<=t1;t+=step*HOUR){
+  const el=document.createElement('div');el.className='tick';
+  el.style.left=((t-t0)/(t1-t0)*100)+'%';
+  el.textContent=step>=24?fmtDay(t):new Date(t).toISOString().slice(5,16).replace('T',' ');
+  ticks.appendChild(el);
+ }
+ const thr=+document.getElementById('thr').value;
+ let maxN=1,bursts=0;
+ DATA.hosts.forEach((h,hi)=>{
+  if(hiddenH.includes(h))return;
+  const col=HOST_COLORS[hi%HOST_COLORS.length];
+  const lane=document.createElement('div');lane.className='lane';
+  const he=document.createElement('div');he.className='host';he.style.color=col;he.textContent=h;lane.appendChild(he);
+  const track=document.createElement('div');track.className='track';
+  (DATA.hourly[h]||[]).forEach(p=>{
+   const t=Date.parse(p.t+':00Z');if(t<t0||t>t1)return;
+   maxN=Math.max(maxN,p.n);if(p.n>=thr)bursts++;
+   const el=document.createElement('div');el.className='bar';
+   const hpx=Math.max(3,22*Math.sqrt(p.n/maxN));
+   el.style.left=((t-t0)/(t1-t0)*100)+'%';
+   el.style.width=Math.max(0.25,100*HOUR/(t1-t0))+'%';
+   el.style.top=(29-hpx)+'px';el.style.height=hpx+'px';
+   el.style.background=col;el.style.opacity=p.n>=thr?1:.4;
+   el.onmouseenter=ev=>showTip(ev,`<b>${esc(h)}</b><br>Событий: <b>${p.n}</b>/час<br><span class="t">${esc(p.t)}:00 UTC</span><br><span class="t">клик — записи журнала</span>`);
+   el.onmouseleave=hideTip;
+   el.onclick=()=>showHour(h,p);
+   track.appendChild(el);
+  });
+  DATA.facts.forEach(f=>{
+   if(f.host!==h||hiddenK.has(f.kind))return;
+   const t=Date.parse(f.t+':00Z');if(t<t0||t>t1)return;
+   const el=document.createElement('div');el.className='fact';
+   el.style.left=`calc(${(t-t0)/(t1-t0)*100}% - 4px)`;
+   el.style.background=`var(${(KIND[f.kind]||{c:'--red'}).c})`;
+   el.onmouseenter=ev=>showTip(ev,`<b>${esc(f.label)}</b><br>Хост: <b>${esc(f.host)}</b><br><span class="t">${esc(f.t)} UTC</span><br><span class="t">клик — подробности</span>`);
+   el.onmouseleave=hideTip;
+   el.onclick=()=>showFact(f);
+   track.appendChild(el);
+  });
+  lane.appendChild(track);tl.appendChild(lane);
+ });
+ document.getElementById('stats').textContent=`окно ${fmtDay(t0)} — ${fmtDay(t1)} (${Math.round(span)} ч) · всплесков ≥${thr}/час: ${bursts}`;
+ document.getElementById('rangeLbl').textContent=zoomed?`${fmtT(t0)} → ${fmtT(t1)} UTC`:'весь период';
+}
+
+function showFact(f){
+ const p=document.getElementById('panel');
+ const k=KIND[f.kind]||{c:'--red',n:f.kind};
+ p.style.display='block';
+ p.innerHTML=`<span class="close" onclick="this.parentElement.style.display='none'">✕ закрыть</span>
+ <h3><span style="color:var(${k.c})">●</span> ${esc(f.label)}</h3>
+ <table><tr><td class="k">Хост</td><td><b>${esc(f.host)}</b></td></tr>
+ <tr><td class="k">Время (UTC)</td><td>${esc(f.t)}</td></tr>
+ <tr><td class="k">Время (Мск)</td><td>${esc(f.t)} + 3 ч</td></tr>
+ <tr><td class="k">Категория</td><td>${k.n}</td></tr></table>
+ <p>${esc(f.details||'')}</p>`;
+ p.scrollTop=0;
+}
+function showHour(h,p){
+ const p2=document.getElementById('panel');
+ const rules=(p.rules||[]).map(r=>`<tr><td class="k">${r.n}×</td><td>${esc(r.rule)}</td></tr>`).join('');
+ const recs=(p.samples||[]).map((s,i)=>`<div class="rec"><span class="hdr">Запись ${i+1} · ${esc(s.ts)} · ${esc(s.ch)} · EID ${esc(s.eid)}</span>\nПравило: ${esc(s.rule)}\nДетали: ${esc(s.details)}${s.extra?'\nДоп.: '+esc(s.extra):''}</div>`).join('');
+ p2.style.display='block';
+ p2.innerHTML=`<span class="close" onclick="this.parentElement.style.display='none'">✕ закрыть</span>
+ <h3><b>${esc(h)}</b> · час ${esc(p.t)} UTC (+3 ч = Мск)</h3>
+ <p>Всего событий: <b>${p.n}</b>. Топ правил Hayabusa за час:</p>
+ <table>${rules}</table>
+ <p class="mut">Образцы записей журнала за этот час (до 12):</p>${recs}`;
+ p2.scrollTop=0;
+}
+
+function setRange(a,b){
+ a=Math.max(T0,a);b=Math.min(T1,b);
+ if(b-a<HOUR)return;
+ T0V=a;T1V=b;zoomed=true;render();
+}
+function resetZoom(){zoomed=false;T0V=T1V=0;render()}
+document.getElementById('thr').oninput=e=>{document.getElementById('thrV').textContent=e.target.value;render()};
+document.getElementById('reset').onclick=resetZoom;
+
+const area=document.getElementById('scrollArea');
+area.addEventListener('wheel',ev=>{
+ if(ev.shiftKey||Math.abs(ev.deltaX)>Math.abs(ev.deltaY)){
+  area.scrollLeft+=(ev.deltaX||ev.deltaY);ev.preventDefault();return;
+ }
+ ev.preventDefault();
+ const iw=document.getElementById('tlInner').offsetWidth, vw=area.clientWidth;
+ const maxL=iw-vw;
+ const frac=maxL>0?area.scrollLeft/maxL:0.5;
+ const b0=zoomed?T0V:T0, b1=zoomed?T1V:T0+hoursTotal*HOUR;
+ const ct=b0+frac*(b1-b0);
+ const f=ev.deltaY<0?0.7:1/0.7;
+ let n0=ct-(ct-b0)*f, n1=ct+(b1-ct)*f;
+ if(n1-n0>=(T1-T0)){resetZoom();return}
+ if(n1-n0<HOUR)n1=n0+HOUR;
+ setRange(n0,n1);
+ requestAnimationFrame(()=>{
+  const niw=document.getElementById('tlInner').offsetWidth, nmax=niw-area.clientWidth;
+  const nfrac=(ct-n0)/(n1-n0);
+  area.scrollLeft=Math.max(0,Math.min(nmax,nfrac*nmax));
+ });
+},{passive:false});
+(function(){
+ const tl=document.getElementById('tl');let sx=0,box=null,rect0=null;
+ tl.addEventListener('mousedown',ev=>{
+  if(ev.target.closest('.bar,.fact'))return;
+  const track=tl.querySelector('.lane .track');
+  rect0=(track||tl).getBoundingClientRect();
+  sx=ev.clientX-rect0.left;
+  box=document.createElement('div');
+  box.style.cssText='position:absolute;border:1px dashed #8b5cf6;background:#8b5cf622;pointer-events:none;top:0;height:100%;z-index:50';
+  tl.appendChild(box);
+  const move=e=>{const x=e.clientX-rect0.left;box.style.left=Math.min(sx,x)+'px';box.style.width=Math.abs(x-sx)+'px'};
+  const up=e=>{const x=e.clientX-rect0.left;box.remove();box=null;
+   const a=Math.min(sx,x)/rect0.width,b=Math.max(sx,x)/rect0.width;
+   if(b-a<0.004)return;
+   const base=zoomed?[T0V,T1V]:[T0,T0+hoursTotal*HOUR];
+   setRange(base[0]+a*(base[1]-base[0]),base[0]+b*(base[1]-base[0]));
+   document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up)};
+  document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
+ });
+ tl.addEventListener('dblclick',resetZoom);
+})();
+function showTip(ev,html){const tip=document.getElementById('tip');tip.innerHTML=html;tip.style.display='block';
+ tip.style.left=Math.min(ev.clientX+14,innerWidth-370)+'px';tip.style.top=(ev.clientY+10)+'px'}
+function hideTip(){document.getElementById('tip').style.display='none'}
+</script>
+</body>
+</html>
