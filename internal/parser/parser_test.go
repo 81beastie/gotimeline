@@ -3,6 +3,7 @@ package parser
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/81beastie/gotimeline/internal/domain"
@@ -144,6 +145,27 @@ func TestParse_HostsSorted(t *testing.T) {
 		if h != want[i] {
 			t.Errorf("Hosts[%d] = %q, ожидала %q (сортировка A-Z)", i, h, want[i])
 		}
+	}
+}
+
+func TestParse_ClampsLongDetails(t *testing.T) {
+	long := strings.Repeat("x", 250)
+	path := writeTemp(t, csvHeader+"\n"+
+		`"2026-09-14T01:00:00Z","R","info","H","Sec","1","1","`+long+`","`+long+`","r"`+"\n")
+
+	data, err := Parse(path, Options{MinLevel: domain.LevelInfo})
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := data.Hourly["H"][0].Samples[0]
+	if len(s.Details) != 203 {
+		t.Errorf("Details: %d байт, ожидала 200 + многоточие (3 байта UTF-8)", len(s.Details))
+	}
+	if !strings.HasSuffix(s.Details, "…") {
+		t.Error("Details должен заканчиваться многоточием")
+	}
+	if len(s.Extra) != 153 {
+		t.Errorf("Extra: %d байт, ожидала 150 + многоточие (3 байта UTF-8)", len(s.Extra))
 	}
 }
 
