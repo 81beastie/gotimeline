@@ -25,24 +25,62 @@ func main() {
 }
 
 // mainWithArgs — парсинг флагов и запуск; код возврата для тестов.
+// Первый позиционный аргумент (без флага) — каталог с EVTX (аналог -dir).
 func mainWithArgs(args []string) int {
 	fs := flag.NewFlagSet("gotimeline", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	var cfg config
 	registerFlags(fs, &cfg)
+	fs.Usage = func() { printUsage(osStdout) }
 	if err := fs.Parse(args); err != nil {
-		fmt.Fprintln(osStdout, "см. gotimeline -help")
+		if err == flag.ErrHelp {
+			return 0
+		}
+		printUsage(osStdout)
 		return 2
 	}
 	if cfg.showVersion {
 		fmt.Fprintf(osStdout, "gotimeline %s (%s/%s)\n", version, runtime.GOOS, runtime.GOARCH)
 		return 0
 	}
+	if rest := fs.Args(); len(rest) > 0 {
+		cfg.dir = rest[0]
+	}
 	if err := run(cfg); err != nil {
 		log.Println(err)
 		return 1
 	}
 	return 0
+}
+
+// printUsage — справка на русском.
+func printUsage(w io.Writer) {
+	fmt.Fprint(w, `gotimeline `+version+` — интерактивный HTML-таймлайн по EVTX через Hayabusa.
+
+Использование:
+  gotimeline [флаги] [каталог с EVTX]     скан каталога (по умолчанию .)
+  gotimeline -skip-scan -csv file.csv     по готовому CSV Hayabusa
+
+Флаги:
+  -dir каталог        каталог с EVTX (рекурсивно); можно задать позиционным аргументом
+  -hayabusa путь      путь к бинарнику Hayabusa (по умолчанию hayabusa из PATH)
+  -rules каталог      каталог правил Hayabusa (пусто = встроенные)
+  -out файл           итоговый HTML-файл (по умолчанию timeline.html)
+  -work каталог       каталог для промежуточного CSV (пусто = temp)
+  -min-level уровень  минимальный уровень событий: info|low|med|high|critical
+  -facts файл         facts.json с ключевыми маркерами-находками
+  -incident-from T    начало окна инцидента, напр. 2026-09-03T00:00
+  -incident-to T      конец окна инцидента
+  -title текст        заголовок страницы
+  -skip-scan          не запускать Hayabusa, взять готовый CSV (-csv)
+  -csv файл           готовый CSV таймлайна Hayabusa
+  -version            версия и выход
+  -h, -help           эта справка
+
+Примеры:
+  gotimeline ~/cases/pc3 -hayabusa ~/tools/hayabusa -rules ~/tools/rules
+  gotimeline -skip-scan -csv timeline.csv -out report.html -title "Кейс 42"
+`)
 }
 
 type config struct {
