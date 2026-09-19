@@ -9,8 +9,8 @@ import (
 
 func TestCommand_JoinsBinaryAndDir(t *testing.T) {
 	sc := Scanner{Binary: "/opt/hayabusa", Rules: "/rules"}
-	got := sc.Command("/cases/pc3")
-	if !strings.HasPrefix(got, "/opt/hayabusa dfir-timeline -d /cases/pc3") {
+	got := sc.Command("/cases/demo")
+	if !strings.HasPrefix(got, "/opt/hayabusa dfir-timeline -d /cases/demo") {
 		t.Errorf("Command = %q, ожидала начало с бинарника и -d", got)
 	}
 }
@@ -27,7 +27,7 @@ func TestBuild_FakeScannerProducesCSV(t *testing.T) {
 	work := t.TempDir()
 
 	fake := filepath.Join(dir, "fake-hayabusa")
-	script := "#!/bin/sh\nwhile [ $# -gt 0 ]; do\n  case \"$1\" in\n    -o) out=\"$2\"; shift 2;;\n    *) shift;;\n  esac\ndone\nprintf 'Timestamp,Level\\n2026-09-14T01:00:00Z,info\\n' > \"$out\"\n"
+	script := "#!/bin/sh\nwhile [ $# -gt 0 ]; do\n  case \"$1\" in\n    -o) out=\"$2\"; shift 2;;\n    *) shift;;\n  esac\ndone\nprintf 'Timestamp,Level\\n2026-01-01T01:00:00Z,info\\n' > \"$out\"\n"
 	if err := os.WriteFile(fake, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}

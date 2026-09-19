@@ -3,9 +3,9 @@ package domain
 
 // Fact — ключевой маркер на таймлайне (находка расследования).
 type Fact struct {
-	T       string `json:"t"`     // "2026-09-11T09:29"
+	T       string `json:"t"`     // "2026-01-01T09:29"
 	Host    string `json:"host"`  // имя компьютера как в EVTX
-	Kind    string `json:"kind"`  // ключ палитры шаблона (ksos, anydesk, ...)
+	Kind    string `json:"kind"`  // ключ палитры шаблона (av-off, remote, ...)
 	Label   string `json:"label"` // короткий заголовок
 	Details string `json:"details"`
 }
@@ -28,7 +28,7 @@ type RuleCount struct {
 
 // HourPoint — агрегат событий одного хоста за один час.
 type HourPoint struct {
-	T       string      `json:"t"` // "2026-09-14T01"
+	T       string      `json:"t"` // "2026-01-01T01"
 	N       int         `json:"n"`
 	Rules   []RuleCount `json:"rules"`
 	Samples []Sample    `json:"samples"`
@@ -36,7 +36,7 @@ type HourPoint struct {
 
 // Incident — окно инцидента (вертикальная зона на таймлайне).
 type Incident struct {
-	From string `json:"from"` // "2026-09-03T00:00"
+	From string `json:"from"` // "2026-01-01T00:00"
 	To   string `json:"to"`
 }
 

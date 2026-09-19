@@ -10,8 +10,8 @@ import (
 
 func TestLoadFacts_ReadsMarkers(t *testing.T) {
 	content := `[
-	 {"t":"2026-09-11T09:29","host":"BUH3","kind":"ksos","label":"KSOS SNOOZED","details":"пауза антивируса"},
-	 {"t":"2026-09-10T09:22","host":"BUH3","kind":"anydesk","label":"AnyDesk: User"}
+	 {"t":"2026-01-01T09:29","host":"HOST1","kind":"av-off","label":"Антивирус на паузе","details":"защита отключена"},
+	 {"t":"2026-01-02T09:22","host":"HOST1","kind":"remote","label":"Удалённый доступ"}
 	]`
 	path := filepath.Join(t.TempDir(), "facts.json")
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
@@ -25,10 +25,10 @@ func TestLoadFacts_ReadsMarkers(t *testing.T) {
 	if len(facts) != 2 {
 		t.Fatalf("маркеров: %d, ожидала 2", len(facts))
 	}
-	if facts[0].Host != "BUH3" || facts[0].Kind != "ksos" || facts[0].Label != "KSOS SNOOZED" {
+	if facts[0].Host != "HOST1" || facts[0].Kind != "av-off" || facts[0].Label != "Антивирус на паузе" {
 		t.Errorf("первый маркер: %+v", facts[0])
 	}
-	if facts[1].T != "2026-09-10T09:22" {
+	if facts[1].T != "2026-01-02T09:22" {
 		t.Errorf("второй маркер: %+v", facts[1])
 	}
 }

@@ -8,11 +8,11 @@ import (
 )
 
 const okCSV = `"Timestamp","RuleTitle","Level","Computer","Channel","EventID","RecordID","Details","ExtraFieldInfo","RuleID"
-"2026-09-14T01:00:00Z","R","info","H","Sec","1","1","d","e","r"
-"2026-09-14T02:00:00Z","R2","low","H","Sec","2","2","d2","e2","r2"
+"2026-01-01T01:00:00Z","R","info","H","Sec","1","1","d","e","r"
+"2026-01-01T02:00:00Z","R2","low","H","Sec","2","2","d2","e2","r2"
 `
 
-const okFacts = `[{"t":"2026-09-14T01:00","host":"H","kind":"msi","label":"Установка"}]`
+const okFacts = `[{"t":"2026-01-01T01:00","host":"H","kind":"msi","label":"Установка"}]`
 
 func tmpFile(t *testing.T, name, content string) string {
 	t.Helper()
@@ -33,7 +33,7 @@ func TestRun_SkipScanEndToEnd(t *testing.T) {
 		skipScan: true, csvPath: tmpFile(t, "in.csv", okCSV),
 		minLevel: "info", out: out, title: "Тест",
 		factsPath:    tmpFile(t, "facts.json", okFacts),
-		incidentFrom: "2026-09-14T00:00", incidentTo: "2026-09-14T23:59",
+		incidentFrom: "2026-01-01T00:00", incidentTo: "2026-01-01T23:59",
 	}
 	if err := run(cfg); err != nil {
 		t.Fatal(err)

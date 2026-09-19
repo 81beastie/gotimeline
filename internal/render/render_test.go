@@ -12,14 +12,14 @@ import (
 
 func sampleData() *domain.Data {
 	return &domain.Data{
-		Facts: []domain.Fact{{T: "2026-09-11T09:29", Host: "BUH3", Kind: "ksos", Label: "KSOS SNOOZED"}},
-		Hosts: []string{"BUH3"},
+		Facts: []domain.Fact{{T: "2026-01-01T09:29", Host: "HOST1", Kind: "av-off", Label: "Антивирус на паузе"}},
+		Hosts: []string{"HOST1"},
 		Hourly: map[string][]domain.HourPoint{
-			"BUH3": {{T: "2026-09-11T09", N: 5,
+			"HOST1": {{T: "2026-01-01T09", N: 5,
 				Rules:   []domain.RuleCount{{Rule: "Svc Installed", N: 5}},
-				Samples: []domain.Sample{{Ts: "2026-09-11T09:32:00Z", Rule: "Svc Installed", EID: "7045", Ch: "Sys", Details: "Svc: Acrobat"}}}},
+				Samples: []domain.Sample{{Ts: "2026-01-01T09:32:00Z", Rule: "Svc Installed", EID: "7045", Ch: "Sys", Details: "Svc: demo-svc"}}}},
 		},
-		Incident: &domain.Incident{From: "2026-09-03T00:00", To: "2026-09-17T23:59"},
+		Incident: &domain.Incident{From: "2026-01-01T00:00", To: "2026-01-07T23:59"},
 	}
 }
 
@@ -33,7 +33,7 @@ func writeOut(t *testing.T, data *domain.Data, title string) string {
 }
 
 func TestWrite_ProducesAutonomousHTML(t *testing.T) {
-	html, err := os.ReadFile(writeOut(t, sampleData(), "Таймлайн БФК"))
+	html, err := os.ReadFile(writeOut(t, sampleData(), "Таймлайн демо"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,11 +46,11 @@ func TestWrite_ProducesAutonomousHTML(t *testing.T) {
 		t.Error("плейсхолдер заголовка не заменён")
 	}
 	for _, want := range []string{
-		"<h1>Таймлайн БФК</h1>",
-		`<title>Таймлайн БФК</title>`,
-		"KSOS SNOOZED",
-		"BUH3",
-		"2026-09-11T09",
+		"<h1>Таймлайн демо</h1>",
+		`<title>Таймлайн демо</title>`,
+		"Антивирус на паузе",
+		"HOST1",
+		"2026-01-01T09",
 		"окно инцидента",
 	} {
 		if !strings.Contains(s, want) {
@@ -86,20 +86,20 @@ func TestWrite_EmbeddedJSONIsValid(t *testing.T) {
 	if err := json.Unmarshal([]byte(s[start:start+end]), &back); err != nil {
 		t.Fatalf("встроенный JSON не парсится: %v", err)
 	}
-	if len(back.Hosts) != 1 || back.Hosts[0] != "BUH3" {
+	if len(back.Hosts) != 1 || back.Hosts[0] != "HOST1" {
 		t.Errorf("round-trip хостов: %+v", back.Hosts)
 	}
-	if back.Incident == nil || back.Incident.From != "2026-09-03T00:00" {
+	if back.Incident == nil || back.Incident.From != "2026-01-01T00:00" {
 		t.Errorf("round-trip окна инцидента: %+v", back.Incident)
 	}
 }
 
 func TestWrite_TitleHTMLEscaped(t *testing.T) {
-	s := string(mustRead(t, writeOut(t, sampleData(), `Инцидент <"БФК"> & Co`)))
+	s := string(mustRead(t, writeOut(t, sampleData(), `Инцидент <"Демо"> & Co`)))
 	if strings.Contains(s, "<h1>Инцидент <") {
 		t.Error("заголовок с < не экранирован")
 	}
-	if !strings.Contains(s, "&lt;&#34;БФК&#34;&gt;") && !strings.Contains(s, "&lt;&quot;БФК&quot;&gt;") {
+	if !strings.Contains(s, "&lt;&#34;Демо&#34;&gt;") && !strings.Contains(s, "&lt;&quot;Демо&quot;&gt;") {
 		t.Errorf("ожидала экранированный заголовок, найдено: %s", s[:200])
 	}
 }

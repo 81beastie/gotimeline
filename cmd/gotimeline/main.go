@@ -69,7 +69,7 @@ func printUsage(w io.Writer) {
   -work каталог       каталог для промежуточного CSV (пусто = temp)
   -min-level уровень  минимальный уровень событий: info|low|med|high|critical
   -facts файл         facts.json с ключевыми маркерами-находками
-  -incident-from T    начало окна инцидента, напр. 2026-09-03T00:00
+  -incident-from T    начало окна инцидента, напр. 2026-01-01T00:00
   -incident-to T      конец окна инцидента
   -title текст        заголовок страницы
   -skip-scan          не запускать Hayabusa, взять готовый CSV (-csv)
@@ -78,7 +78,7 @@ func printUsage(w io.Writer) {
   -h, -help           эта справка
 
 Примеры:
-  gotimeline ~/cases/pc3 -hayabusa ~/tools/hayabusa -rules ~/tools/rules
+  gotimeline ~/cases/demo -hayabusa ~/tools/hayabusa -rules ~/tools/rules
   gotimeline -skip-scan -csv timeline.csv -out report.html -title "Кейс 42"
 `)
 }
@@ -101,7 +101,7 @@ func registerFlags(fs *flag.FlagSet, cfg *config) {
 	fs.StringVar(&cfg.work, "work", "", "каталог для промежуточного CSV (пусто = temp)")
 	fs.StringVar(&cfg.minLevel, "min-level", "info", "минимальный уровень: info|low|med|high|critical")
 	fs.StringVar(&cfg.factsPath, "facts", "", "facts.json с ключевыми маркерами")
-	fs.StringVar(&cfg.incidentFrom, "incident-from", "", "начало окна инцидента, 2026-09-03T00:00")
+	fs.StringVar(&cfg.incidentFrom, "incident-from", "", "начало окна инцидента, 2026-01-01T00:00")
 	fs.StringVar(&cfg.incidentTo, "incident-to", "", "конец окна инцидента")
 	fs.StringVar(&cfg.title, "title", "Интерактивный таймлайн", "заголовок страницы")
 	fs.BoolVar(&cfg.skipScan, "skip-scan", false, "не запускать Hayabusa, взять готовый CSV (-csv)")

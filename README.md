@@ -72,14 +72,14 @@ API или флагов.
 
 ```bash
 ./gotimeline \
-  -dir /cases/zao-bfk/PC3 \
+  -dir /cases/incident01 \
   -hayabusa ~/tools/hayabusa \
   -rules ~/tools/rules \
   -min-level info \
   -facts facts.json \
-  -incident-from "2026-09-03T00:00" -incident-to "2026-09-17T23:59" \
+  -incident-from "2026-01-01T00:00" -incident-to "2026-01-07T23:59" \
   -out timeline.html \
-  -title "Кейс: БФК, весь парк"
+  -title "Инцидент 01: весь парк"
 ```
 
 ### По готовому CSV Hayabusa (без пересканирования)
@@ -99,7 +99,7 @@ API или флагов.
 | `-work` | temp | каталог для промежуточного CSV |
 | `-min-level` | `info` | минимальный уровень событий: `info` \| `low` \| `med` \| `high` \| `critical` |
 | `-facts` | — | JSON с маркерами-находками |
-| `-incident-from`, `-incident-to` | — | границы окна инцидента, `2026-09-03T00:00` |
+| `-incident-from`, `-incident-to` | — | границы окна инцидента, `2026-01-01T00:00` |
 | `-title` | — | заголовок страницы |
 | `-skip-scan` + `-csv` | — | не запускать Hayabusa, взять готовый CSV |
 | `-version` | — | версия (из тега релиза, локальная сборка — `dev`) |
@@ -109,18 +109,18 @@ API или флагов.
 ```json
 [
   {
-    "t": "2026-09-11T09:29",
-    "host": "BUH3",
-    "kind": "ksos",
+    "t": "2026-01-01T09:29",
+    "host": "HOST1",
+    "kind": "av-off",
     "label": "Антивирус переведён в паузу",
     "details": "Пауза защиты за 3 минуты до установки нелицензионного ПО."
   }
 ]
 ```
 
-Доступные `kind` (цвета в легенде): `ksos`, `anydesk`, `nataliya`, `niols`, `msi`, `reboot`, `journal`, `mesh`, `anon`, `anom`, `rdp`. Незнакомый `kind` рисуется красным с собственным именем — можно задавать свои категории.
+Доступные `kind` (цвета в легенде): `av-off`, `remote`, `auth`, `admin`, `msi`, `reboot`, `journal`, `mesh`, `anon`, `anom`, `rdp`. Незнакомый `kind` рисуется красным с собственным именем — можно задавать свои категории.
 
-Времена — **UTC** в формате ISO (`2026-09-11T09:29`).
+Времена — **UTC** в формате ISO (`2026-01-01T09:29`).
 
 ## Как читать таймлайн
 
