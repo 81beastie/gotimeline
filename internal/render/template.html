@@ -37,6 +37,8 @@ input[type=range]{width:140px}
 .bar:hover{filter:brightness(1.6);outline:1px solid #fff}
 .fact{position:absolute;width:9px;height:18px;top:9px;border-radius:50%;cursor:pointer;z-index:4}
 .fact:hover{transform:scale(1.4);outline:1px solid #fff}
+.fact.app{width:auto;min-width:20px;height:15px;top:10px;border-radius:3px;font-size:9px;font-weight:700;line-height:15px;text-align:center;color:#fff;padding:0 3px;letter-spacing:.5px}
+.fact.app:hover{transform:scale(1.25)}
 .legend{font-size:12px}
 .legend .row{display:flex;align-items:center;gap:6px;margin:4px 0;cursor:pointer;user-select:none}
 .legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -84,12 +86,12 @@ const DATA = /*__DATA__*/null;
 let T0=0,T1=0,hoursTotal=0,T0V=0,T1V=0,zoomed=false;
 const HOUR=3600e3;
 const KIND={
- av-off:{c:'--red',n:'Антивирус OFF/пауза'},
+ 'av-off':{c:'--red',n:'Антивирус OFF/пауза'},
  remote:{c:'--amber',n:'Удалённый доступ'},
  auth:{c:'--violet',n:'Аутентификации/RDP'},
  admin:{c:'--cyan',n:'Действия администратора'},
  msi:{c:'--pink',n:'Установка ПО (MSI)'},
- reboot:{c:'--blue',n:'Перезагрузки'},
+ 'reboot':{c:'--blue',n:'Перезагрузки'},
  journal:{c:'--blue',n:'Ротация журналов'},
  mesh:{c:'--green',n:'Mesh-залпы obmen/аноним'},
  anon:{c:'--green',n:'Анонимные входы'},
@@ -97,6 +99,14 @@ const KIND={
  rdp:{c:'--violet',n:'RDP-входы'},
 };
 const HOST_COLORS=['#3b82f6','#22d3ee','#8b5cf6','#f59e0b','#22c55e','#ec4899','#94a3b8','#f97316','#14b8a6'];
+const APPS={anydesk:{n:'AnyDesk',s:'AD'},rudesktop:{n:'RuDesktop',s:'RD'},teamviewer:{n:'TeamViewer',s:'TV'},ammyy:{n:'Ammyy',s:'AM'},radmin:{n:'Radmin',s:'RA'},meshagent:{n:'MeshAgent',s:'MS'},supremo:{n:'Supremo',s:'SU'},aeroadmin:{n:'AeroAdmin',s:'AE'},ultraviewer:{n:'UltraViewer',s:'UV'},dwservice:{n:'DWService',s:'DW'},logmein:{n:'LogMeIn',s:'LM'}};
+const DIRS={in:{c:'--red',n:'входящие'},out:{c:'--blue',n:'исходящие'}};
+const appKey=f=>f.app?('app:'+f.app+':'+(f.dir||'')):f.kind;
+const appBadge=f=>{
+ const a=APPS[f.app]||{n:f.app,s:f.app.slice(0,2).toUpperCase()};
+ const d=DIRS[f.dir]||{c:'--amber',n:''};
+ return {html:a.s,style:`background:var(${d.c})`,name:a.n+(d.n?' ('+d.n+')':''),color:d.c};
+};
 const fmtT=ms=>new Date(ms).toISOString().slice(0,16).replace('T',' ');
 const fmtDay=ms=>new Date(ms).toISOString().slice(0,10);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -128,6 +138,41 @@ function buildLegend(){
  lg.appendChild(hb);
 }
 
+// drawTicks — метки оси времени без наездов: шаг подбирается под ширину трека
+// (ширина одной метки в пикселях должна вмещать текст), метки равномерно
+// по окну, оба края окна всегда подписаны. При зуме ширина меняется — шаг
+// пересчитывается автоматически.
+function drawTicks(ticks,t0,t1,span){
+ ticks.innerHTML='';
+ const wpx=Math.max(ticks.clientWidth||900,300);
+ const HOURMS=3600e3;
+ const label=t=>span>96?fmtDay(t):new Date(t).toISOString().slice(5,16).replace('T',' ');
+ // ширина текста метки в пикселях (~6.2px/символ + отступ)
+ const lw=label(t1).length*6.2+16;
+ // сколько меток влезает без наездов
+ const maxN=Math.max(2,Math.floor(wpx/lw));
+ // шаг в часах: из кандидатов берём наименьший, при котором меток <= maxN
+ const cands=[1,2,3,6,12,24,48,72,24*7,24*14,24*30,24*91,24*182,24*365];
+ let step=cands[cands.length-1];
+ for(const c of cands){
+  if(Math.ceil(span/c)<=maxN){step=c;break}
+ }
+ const stepMs=step*HOURMS;
+ // равномерная сетка: n интервалов, метки на границах интервалов
+ const n=Math.max(1,Math.min(Math.ceil(span/step),maxN));
+ const iv=(t1-t0)/n;
+ for(let k=0;k<=n;k++){
+  const t=t0+k*iv;
+  const el=document.createElement('div');el.className='tick';
+  const frac=k/n;
+  if(frac<0.005){el.style.left='0'}
+  else if(frac>0.995){el.style.right='2px';el.style.borderLeft='none';el.style.borderRight='1px solid var(--line)';el.style.paddingLeft='0';el.style.paddingRight='3px'}
+  else{el.style.left=(frac*100)+'%'}
+  el.textContent=label(Math.round(t));
+  ticks.appendChild(el);
+ }
+}
+
 function render(){
  const tl=document.getElementById('tl'),inner=document.getElementById('tlInner'),area=document.getElementById('scrollArea');
  const t0=zoomed?T0V:T0, t1=zoomed?T1V:T0+hoursTotal*HOUR, span=(t1-t0)/HOUR;
@@ -150,13 +195,7 @@ function render(){
  const ax=document.createElement('div');ax.className='axis';
  ax.innerHTML='<div class="host">время →</div><div class="ticks"></div>';tl.appendChild(ax);
  const ticks=ax.querySelector('.ticks');
- const step=span>24*60?24*14:span>24*20?24*7:span>24*4?24:span>96?6:span>24?2:1;
- for(let t=Math.ceil(t0/(step*HOUR))*step*HOUR;t<=t1;t+=step*HOUR){
-  const el=document.createElement('div');el.className='tick';
-  el.style.left=((t-t0)/(t1-t0)*100)+'%';
-  el.textContent=step>=24?fmtDay(t):new Date(t).toISOString().slice(5,16).replace('T',' ');
-  ticks.appendChild(el);
- }
+ drawTicks(ticks,t0,t1,span);
  const thr=+document.getElementById('thr').value;
  let maxN=1,bursts=0;
  DATA.hosts.forEach((h,hi)=>{

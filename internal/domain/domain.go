@@ -8,6 +8,8 @@ type Fact struct {
 	Kind    string `json:"kind"`  // ключ палитры шаблона (av-off, remote, ...)
 	Label   string `json:"label"` // короткий заголовок
 	Details string `json:"details"`
+	App     string `json:"app,omitempty"` // инструмент удалёнки: anydesk, rudesktop, ...
+	Dir     string `json:"dir,omitempty"` // направление коннекта: "in" | "out"
 }
 
 // Sample — образец записи журнала внутри одного часа.
